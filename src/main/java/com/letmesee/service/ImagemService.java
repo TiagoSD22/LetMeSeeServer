@@ -75,6 +75,9 @@ public class ImagemService {
 				e.printStackTrace();
 			}
 			break;
+		case "roberts":
+			saida = Filtros.getInstancia().RobertsCross(img);
+			break;
 		default:
 			break;
 		}
