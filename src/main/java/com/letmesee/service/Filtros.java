@@ -3,6 +3,7 @@ package com.letmesee.service;
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -10,21 +11,30 @@ import java.io.IOException;
 import java.util.Base64;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
 import javax.inject.Singleton;
 
 import com.letmesee.entity.Imagem;
 
 import aj.org.objectweb.asm.Type;
 
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+
 @Singleton
 public class Filtros {
 	private static Filtros instancia;
-	
+	private static FiltrosUtils filtrosUtils;
 	private Filtros() {}
 	
 	public static synchronized Filtros getInstancia() {
 		if(instancia == null) {
 			instancia = new Filtros();
+			filtrosUtils = FiltrosUtils.getInstancia();
 		}
 		return instancia;
 	}
@@ -55,6 +65,20 @@ public class Filtros {
 		return null;
 	}
 	
+	public static Mat BufferedImage2Mat(BufferedImage image, String formato) throws IOException {
+	    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+	    ImageIO.write(image, formato, byteArrayOutputStream);
+	    byteArrayOutputStream.flush();
+	    return Imgcodecs.imdecode(new MatOfByte(byteArrayOutputStream.toByteArray()), Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
+	}
+	
+	public static BufferedImage Mat2BufferedImage(Mat matrix, String formato)throws IOException {
+	    MatOfByte mob=new MatOfByte();
+	    Imgcodecs.imencode(".png", matrix, mob);
+	    return ImageIO.read(new ByteArrayInputStream(mob.toArray()));
+	}
+
+	
 	public int getCanalR(BufferedImage img, int i, int j) {
 		Color c = new Color(img.getRGB(j, i));
 		return c.getRed();
@@ -70,8 +94,18 @@ public class Filtros {
 		return c.getBlue();
 	}
 	
+	public int getAlpha(BufferedImage img, int i, int j) {
+		Color c = new Color(img.getRGB(j, i));
+		return c.getAlpha();
+	}
+	
 	public void setPixel(BufferedImage img, int i, int j, int r, int g, int b) {
 		Color c = new Color(r,g,b);
+		img.setRGB(j,i,c.getRGB());
+	}
+	
+	public void setPixel(BufferedImage img, int i, int j, int r, int g, int b,int a) {
+		Color c = new Color(r,g,b,a);
 		img.setRGB(j,i,c.getRGB());
 	}
 	
@@ -93,37 +127,6 @@ public class Filtros {
 		}
 		return saida;
 	}
-	
-	/*public Imagem Negativo(Imagem img) {
-		BufferedImage imagem = this.base64toBufferedImage(img.getConteudoBase64());
-		BufferedImage saidaBF = imagem;
-		Imagem saida = null;
-		Color c,novoPixel;
-		int i,j,r,g,b,a;
-		for(i = 0; i < imagem.getHeight(); i++) {
-			for(j = 0; j < imagem.getWidth(); j++) {
-				c = new Color(imagem.getRGB(j, i));
-				a = c.getAlpha();
-				r = 255 - c.getRed();
-				g = 255 - c.getGreen();
-				b = 255 - c.getBlue();
-				if(r < 0) {
-					r = 0;
-				}
-				if(g < 0) {
-					g = 0;
-				}
-				if(b < 0) {
-					b = 0;
-				}
-				novoPixel = new Color(r,g,b,a);
-				saidaBF.setRGB(j, i,novoPixel.getRGB());
-			}
-		}
-		String novoConteudoBase64 = this.BufferedImageToBase64(saidaBF,img.getTipo());
-		saida = new Imagem(img.getAltura(),img.getAltura(),img.getTipo(),img.getNome().concat("+Negativo"),novoConteudoBase64);
-		return saida;
-	}*/
 	
 	public Imagem Negativo(Imagem img) {
 		BufferedImage imagem = this.base64toBufferedImage(img.getConteudoBase64());
@@ -149,6 +152,30 @@ public class Filtros {
 		}
 		String novoConteudoBase64 = this.BufferedImageToBase64(saidaBF,img.getTipo());
 		saida = new Imagem(img.getLargura(),img.getAltura(),img.getTipo(),img.getNome().concat("+Negativo"),novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem Negativo2(Imagem img) {
+		BufferedImage imagem = this.base64toBufferedImage(img.getConteudoBase64());
+		int i,j,p,r,g,b,a;
+		for(i = 0; i < imagem.getHeight(); i++) {
+			for(j = 0; j < imagem.getWidth(); j++) {
+				p = imagem.getRGB(j, i);
+			    a = (p>>24) & 0xff;
+			    r = (p>>16) & 0xff;
+			    g = (p>>8) & 0xff;
+			    b = p & 0xff;
+			    r = 255 - r;
+			    g = 255 - g;
+			    b = 255 - b;
+			    p = (a<<24) | (r<<16) | (g<<8) | b;
+				imagem.setRGB(j, i, p);
+			}
+		}
+		BufferedImage saidaBF = new BufferedImage(imagem.getWidth(),imagem.getHeight(),BufferedImage.TYPE_INT_ARGB);
+		saidaBF.createGraphics().drawImage(imagem, 0, 0, null);
+		String novoConteudoBase64 = this.BufferedImageToBase64(saidaBF,img.getTipo());
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),img.getTipo(),img.getNome().concat("+Negativo"),novoConteudoBase64);
 		return saida;
 	}
 	
@@ -295,5 +322,49 @@ public class Filtros {
 		String novoConteudoBase64 = this.BufferedImageToBase64(saidaBF,img.getTipo());
 		saida = new Imagem(img.getLargura(),img.getAltura(),img.getTipo(),img.getNome().concat("+RobertsCross"),novoConteudoBase64);
 		return saida;
+	}
+	
+	public Imagem EscalaCinza(Imagem img) {
+		System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
+		BufferedImage image = base64toBufferedImage(img.getConteudoBase64());
+		byte[] data = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        Mat mat = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC4);
+        
+        mat.put(0, 0, data);
+		
+		/*Mat mat = null;
+		try {
+			mat = BufferedImage2Mat(image, img.getTipo());
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}*/
+
+        Mat mat1 = new Mat(image.getHeight(),image.getWidth(),CvType.CV_8UC4);
+        Imgproc.cvtColor(mat, mat1, Imgproc.COLOR_RGBA2GRAY);
+
+        byte[] data1 = new byte[mat1.rows() * mat1.cols() * (int)(mat1.elemSize())];
+        mat1.get(0, 0, data1);
+        BufferedImage image1 = new BufferedImage(mat1.cols(),mat1.rows(), BufferedImage.TYPE_4BYTE_ABGR);
+        image1.getRaster().setDataElements(0, 0, mat1.cols(), mat1.rows(), data1);
+        
+        /*BufferedImage image1 = null;
+		try {
+			image1 = Mat2BufferedImage(mat1, img.getTipo());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+        
+        /*File ouptut = new File("grayscale.png");
+        try {
+			ImageIO.write(image1, "png", ouptut);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+        
+        Imagem saida = new Imagem(img.getLargura(),img.getAltura(),img.getTipo(),img.getNome().concat("+Escala_Cinza"),BufferedImageToBase64(image1,img.getTipo()));
+        return saida;
 	}
 }
