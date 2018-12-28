@@ -15,6 +15,7 @@ import javax.imageio.ImageReader;
 import javax.inject.Singleton;
 
 import com.letmesee.entity.Imagem;
+import com.letmesee.service.FiltrosUtils.Pixel;
 
 import aj.org.objectweb.asm.Type;
 
@@ -130,28 +131,23 @@ public class Filtros {
 	
 	public Imagem Negativo(Imagem img) {
 		BufferedImage imagem = this.base64toBufferedImage(img.getConteudoBase64());
-		BufferedImage saidaBF = imagem;
-		Imagem saida = null;
 		int i,j,r,g,b;
+		Pixel p;
+		String formato = img.getTipo();
 		for(i = 0; i < imagem.getHeight(); i++) {
 			for(j = 0; j < imagem.getWidth(); j++) {
-				r = 255 - getCanalR(imagem,i,j);
-				g = 255 - getCanalG(imagem,i,j);
-				b = 255 - getCanalB(imagem,i,j);
-				if(r < 0) {
-					r = 0;
-				}
-				if(g < 0) {
-					g = 0;
-				}
-				if(b < 0) {
-					b = 0;
-				}
-				setPixel(saidaBF,i,j,r,g,b);
+				p = filtrosUtils.getPixel(imagem, i, j, formato);
+				r = 255 - p.getR();
+				g = 255 - p.getG();
+				b = 255 - p.getB();
+				p.setR(r);
+				p.setG(g);
+				p.setB(b);
+				filtrosUtils.setPixel(imagem, i,j,p, formato);
 			}
 		}
-		String novoConteudoBase64 = this.BufferedImageToBase64(saidaBF,img.getTipo());
-		saida = new Imagem(img.getLargura(),img.getAltura(),img.getTipo(),img.getNome().concat("+Negativo"),novoConteudoBase64);
+		String novoConteudoBase64 = this.BufferedImageToBase64(imagem,formato);
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,img.getNome().concat("+Negativo"),novoConteudoBase64);
 		return saida;
 	}
 	
@@ -181,17 +177,15 @@ public class Filtros {
 	
 	public Imagem Limiar(Imagem img, int valorLimiar) {
 		BufferedImage imagem = this.base64toBufferedImage(img.getConteudoBase64());
-		BufferedImage saidaBF = imagem;
-		Imagem saida = null;
-		Color c,novoPixel;
-		int i,j,r,g,b,a,novaCor;
+		int i,j,r,g,b,novaCor;
+		String formato = img.getTipo();
+		Pixel p;
 		for(i = 0; i < imagem.getHeight(); i++) {
 			for(j = 0; j < imagem.getWidth(); j++) {
-				c = new Color(imagem.getRGB(j, i));
-				a = c.getAlpha();
-				r = (int) (c.getRed() * 0.299);
-				g = (int) (c.getGreen() * 0.587);
-				b = (int) (c.getBlue() *0.114);
+				p = filtrosUtils.getPixel(imagem, i, j, formato);
+				r = (int) (p.getR() * 0.299);
+				g = (int) (p.getG() * 0.587);
+				b = (int) (p.getB() *0.114);
 				novaCor = r + g + b;
 				if(novaCor > valorLimiar) {
 					novaCor = 255;
@@ -199,52 +193,35 @@ public class Filtros {
 				else {
 					novaCor = 0;
 				}
-				novoPixel = new Color(novaCor,novaCor,novaCor,a);
-				saidaBF.setRGB(j, i,novoPixel.getRGB());
+				p.setRGB(novaCor,novaCor,novaCor);
+				filtrosUtils.setPixel(imagem, i, j, p, formato);
 			}
 		}
-		String novoConteudoBase64 = this.BufferedImageToBase64(saidaBF,img.getTipo());
-		saida = new Imagem(img.getLargura(),img.getAltura(),img.getTipo(),img.getNome().concat("+Limiar(").concat(String.valueOf(valorLimiar)).concat(")"),novoConteudoBase64);
+		String novoConteudoBase64 = this.BufferedImageToBase64(imagem,formato);
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,img.getNome().concat("+Limiar(").concat(String.valueOf(valorLimiar)).concat(")"),novoConteudoBase64);
 		return saida;
 	}
 	
 	public Imagem AjusteRGB(Imagem img, int valoR, int valorG, int valorB) {
 		BufferedImage imagem = this.base64toBufferedImage(img.getConteudoBase64());
-		BufferedImage saidaBF = imagem;
-		Imagem saida = null;
-		Color c,novoPixel;
-		int i,j,r,g,b,a;
+		int i,j,r,g,b;
+		Pixel p;
+		String formato = img.getTipo();
 		for(i = 0; i < imagem.getHeight(); i++) {
 			for(j = 0; j < imagem.getWidth(); j++) {
-				c = new Color(imagem.getRGB(j, i));
-				a = c.getAlpha();
-				r = c.getRed() + valoR;
-				g = c.getGreen() + valorG;
-				b = c.getBlue() + valorB;
-				if(r > 255) {
-					r = 255;
-				}
-				if(r < 0) {
-					r = 0;
-				}
-				if(g > 255) {
-					g = 255;
-				}
-				if(g < 0) {
-					g = 0;
-				}
-				if(b > 255) {
-					b = 255;
-				}
-				if(b < 0) {
-					b = 0;
-				}
-				novoPixel = new Color(r,g,b,a);
-				saidaBF.setRGB(j, i,novoPixel.getRGB());
+				p = filtrosUtils.getPixel(imagem, i, j, formato);
+				r = p.getR() + valoR;
+				g = p.getG() + valorG;
+				b = p.getB() + valorB;
+				r = filtrosUtils.TruncarValor(r);
+				g = filtrosUtils.TruncarValor(g);
+				b = filtrosUtils.TruncarValor(b);
+				p.setRGB(r, g, b);
+				filtrosUtils.setPixel(imagem, i, j, p, formato);
 			}
 		}
-		String novoConteudoBase64 = this.BufferedImageToBase64(saidaBF,img.getTipo());
-		saida = new Imagem(img.getLargura(),img.getAltura(),img.getTipo(),img.getNome().concat("+AjusteRGB"),novoConteudoBase64);
+		String novoConteudoBase64 = this.BufferedImageToBase64(imagem,formato);
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,img.getNome().concat("+AjusteRGB"),novoConteudoBase64);
 		return saida;
 	}
 	

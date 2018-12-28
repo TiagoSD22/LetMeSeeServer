@@ -53,7 +53,7 @@ public class ImagemService {
 		Imagem saida = null;
 		switch(filtro) {
 		case "negativo":
-			saida = Filtros.getInstancia().Negativo2(img);
+			saida = Filtros.getInstancia().Negativo(img);
 			break;
 		case "limiar":
 			ObjectMapper mapper = new ObjectMapper();

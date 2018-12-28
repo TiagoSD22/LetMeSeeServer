@@ -51,9 +51,10 @@ public class Imagem {
 	public Imagem(int largura, int altura, String tipo, String nome, String conteudoBase64) {
 		this.altura = altura;
 		this.largura = largura;
-		this.tipo = tipo;
 		this.nome = nome;
 		this.conteudoBase64 = conteudoBase64;
+		this.tipo = tipo;
+		if(this.tipo.equals("jpeg")) this.tipo = "jpg";
 	}
 	
 	public Imagem() {}
