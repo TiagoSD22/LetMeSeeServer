@@ -1,6 +1,5 @@
 package com.letmesee.controller;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,13 +10,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.letmesee.entity.Imagem;
 import com.letmesee.service.ImagemService;
 
@@ -27,7 +21,6 @@ import com.letmesee.service.ImagemService;
 public class ControladorImagem {
 	@Autowired
 	private ImagemService imgService;
-	
 	
 	@RequestMapping(value = "/upload", method = RequestMethod.POST)
 	public ResponseEntity<Imagem> uploadFile(MultipartHttpServletRequest mrequest){
