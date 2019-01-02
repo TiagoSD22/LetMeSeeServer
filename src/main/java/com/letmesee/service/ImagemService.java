@@ -49,6 +49,9 @@ public class ImagemService {
 		case "negativo":
 			saida = FiltrosFacade.getInstancia().Negativo(img);
 			break;
+		case "escala_cinza":
+			saida = FiltrosFacade.getInstancia().EscalaDeCinza(img);
+			break;
 		case "limiar":
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode parametroJson;
@@ -59,12 +62,98 @@ public class ImagemService {
 				e.printStackTrace();
 			}
 			break;
+		case "dilatar":
+			ObjectMapper mapperDilatar = new ObjectMapper();
+			JsonNode parametroDilatar;
+			try {
+				parametroDilatar = mapperDilatar.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().Dilatar(img, parametroDilatar.get("w").asInt(),parametroDilatar.get("h").asInt());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
+		case "erodir":
+			ObjectMapper mapperErodir = new ObjectMapper();
+			JsonNode parametroErodir;
+			try {
+				parametroErodir = mapperErodir.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().Erodir(img, parametroErodir.get("w").asInt(),parametroErodir.get("h").asInt());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
+		case "blur":
+			ObjectMapper mapperBlur = new ObjectMapper();
+			JsonNode parametroBlur;
+			try {
+				parametroBlur = mapperBlur.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().Blur(img, parametroBlur.get("w").asInt(),parametroBlur.get("h").asInt());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
+		case "gaussian_blur":
+			ObjectMapper mapperGBlur = new ObjectMapper();
+			JsonNode parametroGBlur;
+			try {
+				parametroGBlur = mapperGBlur.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().GaussianBlur(img, parametroGBlur.get("w").asInt(),parametroGBlur.get("h").asInt(), parametroGBlur.get("x").asDouble(), parametroGBlur.get("y").asDouble());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
+		case "mediana":
+			ObjectMapper mapperMediana = new ObjectMapper();
+			JsonNode parametroMediana;
+			try {
+				parametroMediana = mapperMediana.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().Mediana(img, parametroMediana.get("k").asInt());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
+		case "sobel":
+			saida = FiltrosFacade.getInstancia().Sobel(img);
+			break;
+		case "contraste":
+			ObjectMapper mapperContraste = new ObjectMapper();
+			JsonNode parametroContraste;
+			try {
+				parametroContraste = mapperContraste.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().Contraste(img, parametroContraste.get("bias").asInt());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
+		case "brilho":
+			ObjectMapper mapperBrilho = new ObjectMapper();
+			JsonNode parametroBrilho;
+			try {
+				parametroBrilho = mapperBrilho.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().Brilho(img, parametroBrilho.get("gain").asDouble());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
+		case "equalizar_histograma":
+			saida = FiltrosFacade.getInstancia().EqualizarHistograma(img);
+			break;
 		case "ajusteRGB":
 			ObjectMapper mapperRGB = new ObjectMapper();
 			JsonNode parametroJsonRGB;
 			try {
 				parametroJsonRGB = mapperRGB.readTree(parametrosFiltro);
 				saida = FiltrosFacade.getInstancia().AjusteRGB(img, parametroJsonRGB.get("valorR").asInt(),parametroJsonRGB.get("valorG").asInt(),parametroJsonRGB.get("valorB").asInt());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
+		case "redimensionar":
+			ObjectMapper mapperResize = new ObjectMapper();
+			JsonNode parametroJsonResize;
+			try {
+				parametroJsonResize = mapperResize.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().Redimensionar(img, parametroJsonResize.get("w").asInt(),parametroJsonResize.get("h").asInt());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

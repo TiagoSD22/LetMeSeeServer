@@ -52,7 +52,7 @@ public class FiltrosFacade {
 		String novoConteudoBase64 = "";
 		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
 			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
-			filtros.Limiar(imagem,valorLimiar,formato);
+			filtros.Limiar(imagem, formato, valorLimiar);
 			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
 			imagem = null;
 		}
@@ -61,7 +61,7 @@ public class FiltrosFacade {
 			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
 			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
 			for(BufferedImage f : frames) {
-				f = filtros.Limiar(f,valorLimiar,formato);
+				f = filtros.Limiar(f, formato, valorLimiar);
 				framesProcessados.add(f);
 			}
 			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
@@ -72,12 +72,12 @@ public class FiltrosFacade {
 		return saida;
 	}
 	
-	public Imagem AjusteRGB(Imagem img, int valorR, int valorG, int valorB) {
+	public Imagem EscalaDeCinza(Imagem img) {
 		String formato = img.getTipo();
 		String novoConteudoBase64 = "";
 		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
 			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
-			filtros.AjusteRGB(imagem, valorR, valorG, valorB,formato);
+			filtros.EscalaDeCinza(imagem, formato);
 			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
 			imagem = null;
 		}
@@ -86,7 +86,32 @@ public class FiltrosFacade {
 			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
 			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
 			for(BufferedImage f : frames) {
-				f = filtros.AjusteRGB(f, valorR, valorG, valorB, formato);
+				f = filtros.EscalaDeCinza(f,formato);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,img.getNome().concat("+Escala_Cinza"),novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem AjusteRGB(Imagem img, int valorR, int valorG, int valorB) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			filtros.AjusteRGB(imagem, formato, valorR, valorG, valorB);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.AjusteRGB(f, formato, valorR, valorG, valorB);
 				framesProcessados.add(f);
 			}
 			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
@@ -202,6 +227,295 @@ public class FiltrosFacade {
 			framesProcessados = null;
 		}
 		Imagem saida = new Imagem(img.getAltura(),img.getLargura(),formato,img.getNome().concat("+Rotação_Anti-horária"),novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem Dilatar(Imagem img, int w, int h) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.Dilatar(imagem, formato, w, h);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.Dilatar(f, formato, w, h);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,
+				  				  img.getNome().concat("+Dilatação(")
+								  .concat(String.valueOf(w)).concat("x").concat(String.valueOf(h)).concat(")"),
+								  novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem Erodir(Imagem img, int w, int h) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.Erodir(imagem, formato, w, h);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.Erodir(f, formato, w, h);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,
+				  				  img.getNome().concat("+Erosão(")
+								  .concat(String.valueOf(w)).concat("x").concat(String.valueOf(h)).concat(")"),
+								  novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem Blur(Imagem img, int w, int h) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.Blur(imagem, formato, w, h);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.Blur(f, formato, w, h);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,
+				  				  img.getNome().concat("+Blur(")
+								  .concat(String.valueOf(w)).concat("x").concat(String.valueOf(h)).concat(")"),
+								  novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem GaussianBlur(Imagem img, int w, int h, double sigmaX, double sigmaY) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.GaussianBlur(imagem, formato, w, h, sigmaX, sigmaY);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.GaussianBlur(f, formato, w, h, sigmaX, sigmaY);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,
+				  				  img.getNome().concat("+Gaussian_Blur(")
+								  .concat(String.valueOf(w)).concat("x").concat(String.valueOf(h))
+								  .concat(",sx: ").concat(String.valueOf(sigmaX))
+								  .concat(", sy: ").concat(String.valueOf(sigmaY)).concat(")"),
+								  novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem Mediana(Imagem img, int tamanhoMascara) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.Mediana(imagem, formato, tamanhoMascara);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.Mediana(f, formato, tamanhoMascara);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,
+				  				  img.getNome().concat("+Mediana(")
+								  .concat(String.valueOf(tamanhoMascara)).concat(")"),
+								  novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem Contraste(Imagem img, int bias) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.Contraste(imagem, formato, bias);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.Contraste(f, formato, bias);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,
+				  				  img.getNome().concat("+Contraste(")
+				  				  .concat(bias >= 0 ? "+" : "").concat(String.valueOf(bias)).concat(")"),
+								  novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem Brilho(Imagem img, double gain) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.Brilho(imagem, formato, gain);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.Brilho(f, formato, gain);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,
+				  				  img.getNome().concat("+Brilho(")
+				  				  .concat(String.valueOf(gain)).concat(")"),
+								  novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem EqualizarHistograma(Imagem img) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.EqualizarHistograma(imagem, formato);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.EqualizarHistograma(f, formato);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,img.getNome().concat("+Equalização_Histograma"),novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem Sobel(Imagem img) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.Sobel(imagem, formato);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.Sobel(f, formato);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,img.getNome().concat("+Sobel"),novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem Redimensionar(Imagem img, int novaLargura, int novaAltura) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			BufferedImage nova = new BufferedImage(novaLargura, novaAltura, imagem.getType());
+			nova = filtros.Redimensionar(imagem, formato, novaLargura, novaAltura);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(nova,formato);
+			imagem = null;
+			nova = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				BufferedImage nf = new BufferedImage(novaLargura, novaAltura, f.getType());
+				nf = filtros.Redimensionar(f, formato, novaLargura, novaAltura);
+				framesProcessados.add(nf);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(novaLargura,novaAltura,formato,
+				  				  img.getNome().concat("+Redimensionamento(")
+								  .concat(String.valueOf(novaLargura)).concat("x").concat(String.valueOf(novaAltura)).concat(")"),
+								  novoConteudoBase64);
 		return saida;
 	}
 }

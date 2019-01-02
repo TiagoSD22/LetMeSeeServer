@@ -11,6 +11,10 @@ import java.util.Base64;
 import javax.imageio.ImageIO;
 import javax.inject.Singleton;
 
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+
 @Singleton
 public class FiltrosUtils {
 	
@@ -54,6 +58,42 @@ public class FiltrosUtils {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public Mat BufferedImage2Mat(BufferedImage image, String formato)  {
+	    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+	    try {
+	    	if(formato.equals("gif")) {
+	    		ImageIO.write(image, "jpg", byteArrayOutputStream);
+	    	}
+	    	else {
+	    		ImageIO.write(image, formato, byteArrayOutputStream);
+	    	}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	    try {
+			byteArrayOutputStream.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	    return Imgcodecs.imdecode(new MatOfByte(byteArrayOutputStream.toByteArray()), Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
+	}
+	
+	public BufferedImage Mat2BufferedImage(Mat matrix, String formato) {
+	    MatOfByte mob=new MatOfByte();
+	    if(formato.equals("gif")) {
+	    	Imgcodecs.imencode(".jpg", matrix, mob);
+	    }
+	    else {
+	    	Imgcodecs.imencode(".".concat(formato), matrix, mob);
+	    }
+	    try {
+			return ImageIO.read(new ByteArrayInputStream(mob.toArray()));
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	public int getRed(BufferedImage img,int i, int j, String formato) {
