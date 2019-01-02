@@ -148,6 +148,16 @@ public class ImagemService {
 				e.printStackTrace();
 			}
 			break;
+		case "extrair_canal":
+			ObjectMapper mapperExtrair = new ObjectMapper();
+			JsonNode parametroJsonExtrair;
+			try {
+				parametroJsonExtrair = mapperExtrair.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().ExtrairCanal(img, parametroJsonExtrair.get("R").asBoolean(),parametroJsonExtrair.get("G").asBoolean(),parametroJsonExtrair.get("B").asBoolean());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
 		case "redimensionar":
 			ObjectMapper mapperResize = new ObjectMapper();
 			JsonNode parametroJsonResize;

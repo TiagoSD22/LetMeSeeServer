@@ -252,4 +252,23 @@ public class Filtros {
 		BufferedImage saida = filtrosUtils.Mat2BufferedImage(destination, formato);
         return saida;
 	}
+	
+	public BufferedImage ExtrairCanal(BufferedImage img, String formato, boolean extrair_r, boolean extrair_g, boolean extrair_b) {
+		int i,j,r,g,b;
+		Pixel p;
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				p = filtrosUtils.getPixel(img, i, j, formato);
+				r = 0;
+				g = 0;
+				b = 0;
+				if(extrair_r)r = p.getR();
+				if(extrair_g)g = p.getG();
+				if(extrair_b)b = p.getB();
+				p.setRGB(r, g, b);
+				filtrosUtils.setPixel(img, i, j, p, formato);
+			}
+		}
+		return img;
+	}
 }
