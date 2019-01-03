@@ -125,6 +125,16 @@ public class ImagemService {
 				e.printStackTrace();
 			}
 			break;
+		case "trocar_canais":
+			ObjectMapper mapperTrocaCanais = new ObjectMapper();
+			JsonNode parametroTrocaCanais;
+			try {
+				parametroTrocaCanais = mapperTrocaCanais.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().TrocarCanais(img, parametroTrocaCanais.get("canais").asText());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
 		case "brilho":
 			ObjectMapper mapperBrilho = new ObjectMapper();
 			JsonNode parametroBrilho;

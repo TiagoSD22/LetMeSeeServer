@@ -306,4 +306,22 @@ public class Filtros {
 	    }
 	    return img;
 	}
+	
+	public BufferedImage TrocarCanais(BufferedImage img, String formato, String canais) {
+		int i,j,r,g,b;
+		Pixel p;
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				p = filtrosUtils.getPixel(img, i, j, formato);
+				r = p.getR();
+				g = p.getG();
+				b = p.getB();
+				if(canais.equals("RG")) p.setRGB(g, r, b);
+				else if(canais.equals("RB")) p.setRGB(b, g, r);
+				else p.setRGB(r, b, g);
+				filtrosUtils.setPixel(img, i, j, p, formato);
+			}
+		}
+		return img;
+	}
 }

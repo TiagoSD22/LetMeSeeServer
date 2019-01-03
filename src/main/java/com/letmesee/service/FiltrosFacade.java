@@ -401,7 +401,7 @@ public class FiltrosFacade {
 		
 		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,
 				  				  img.getNome().concat("+Contraste(")
-				  				  .concat(gamma > 1 ? "+" : "").concat(String.valueOf(Math.round((gamma - 1) * 100))).concat("%)"),
+				  				  .concat(String.valueOf(Math.round((gamma / 10.0) * 100))).concat("%)"),
 								  novoConteudoBase64);
 		return saida;
 	}
@@ -432,6 +432,38 @@ public class FiltrosFacade {
 				  				  img.getNome().concat("+Brilho(")
 				  				  .concat(gain > 0? "+" : "")
 				  				  .concat(String.valueOf(Math.round(((double)gain / 255) * 100))).concat("%)"),
+								  novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem TrocarCanais(Imagem img, String canais) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.TrocarCanais(imagem, formato, canais);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.TrocarCanais(f, formato, canais);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,
+				  				  img.getNome().concat("+Troca_de_canais(")
+				  				  .concat(canais.equals("RG") ? "R<->G" : "")
+				  				  .concat(canais.equals("RB") ? "R<->B" : "")
+				  				  .concat(canais.equals("GB") ? "G<->B" : "")
+				  				  .concat(")"),
 								  novoConteudoBase64);
 		return saida;
 	}
