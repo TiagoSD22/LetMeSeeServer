@@ -377,12 +377,12 @@ public class FiltrosFacade {
 		return saida;
 	}
 	
-	public Imagem Contraste(Imagem img, int bias) {
+	public Imagem AjustarContraste(Imagem img, double gamma) {
 		String formato = img.getTipo();
 		String novoConteudoBase64 = "";
 		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
 			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
-			imagem = filtros.Contraste(imagem, formato, bias);
+			imagem = filtros.AjustarContraste(imagem, formato, gamma);
 			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
 			imagem = null;
 		}
@@ -391,7 +391,7 @@ public class FiltrosFacade {
 			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
 			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
 			for(BufferedImage f : frames) {
-				f = filtros.Contraste(f, formato, bias);
+				f = filtros.AjustarContraste(f, formato, gamma);
 				framesProcessados.add(f);
 			}
 			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
@@ -401,17 +401,17 @@ public class FiltrosFacade {
 		
 		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,
 				  				  img.getNome().concat("+Contraste(")
-				  				  .concat(bias >= 0 ? "+" : "").concat(String.valueOf(bias)).concat(")"),
+				  				  .concat(gamma > 1 ? "+" : "").concat(String.valueOf(Math.round((gamma - 1) * 100))).concat("%)"),
 								  novoConteudoBase64);
 		return saida;
 	}
 	
-	public Imagem Brilho(Imagem img, double gain) {
+	public Imagem AjustarBrilho(Imagem img, int gain) {
 		String formato = img.getTipo();
 		String novoConteudoBase64 = "";
 		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
 			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
-			imagem = filtros.Brilho(imagem, formato, gain);
+			imagem = filtros.AjustarBrilho(imagem, formato, gain);
 			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
 			imagem = null;
 		}
@@ -420,7 +420,7 @@ public class FiltrosFacade {
 			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
 			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
 			for(BufferedImage f : frames) {
-				f = filtros.Brilho(f, formato, gain);
+				f = filtros.AjustarBrilho(f, formato, gain);
 				framesProcessados.add(f);
 			}
 			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
@@ -430,7 +430,8 @@ public class FiltrosFacade {
 		
 		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,
 				  				  img.getNome().concat("+Brilho(")
-				  				  .concat(String.valueOf(gain)).concat(")"),
+				  				  .concat(gain > 0? "+" : "")
+				  				  .concat(String.valueOf(Math.round(((double)gain / 255) * 100))).concat("%)"),
 								  novoConteudoBase64);
 		return saida;
 	}

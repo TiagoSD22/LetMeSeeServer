@@ -120,7 +120,7 @@ public class ImagemService {
 			JsonNode parametroContraste;
 			try {
 				parametroContraste = mapperContraste.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().Contraste(img, parametroContraste.get("bias").asInt());
+				saida = FiltrosFacade.getInstancia().AjustarContraste(img, parametroContraste.get("gamma").asDouble());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -130,7 +130,7 @@ public class ImagemService {
 			JsonNode parametroBrilho;
 			try {
 				parametroBrilho = mapperBrilho.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().Brilho(img, parametroBrilho.get("gain").asDouble());
+				saida = FiltrosFacade.getInstancia().AjustarBrilho(img, parametroBrilho.get("gain").asInt());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

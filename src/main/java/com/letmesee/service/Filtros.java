@@ -271,4 +271,39 @@ public class Filtros {
 		}
 		return img;
 	}
+	
+	public BufferedImage AjustarBrilho(BufferedImage img, String formato, int alpha) {
+		int i,j,r,g,b;
+		Pixel p;
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				p = filtrosUtils.getPixel(img, i, j, formato);
+				r = filtrosUtils.TruncarValor(p.getR() + alpha);
+				g = filtrosUtils.TruncarValor(p.getG() + alpha);
+				b = filtrosUtils.TruncarValor(p.getB() + alpha);
+				p.setRGB(r, g, b);
+				filtrosUtils.setPixel(img, i, j, p, formato);
+			}
+		}
+		return img;
+	}
+	
+	public BufferedImage AjustarContraste(BufferedImage img, String formato, double valor_gamma){
+	    int i,j,r,g,b;
+	    Pixel p;
+	    for(i = 0; i < img.getHeight(); i++){
+	        for(j = 0; j < img.getWidth(); j++){
+	            p = filtrosUtils.getPixel(img, i, j, formato);
+	            r = p.getR();
+	            g = p.getG();
+	            b = p.getB();
+	            r = filtrosUtils.TruncarValor((int) (255 * Math.pow(((double)((double)r/255)), valor_gamma)));
+	            g = filtrosUtils.TruncarValor((int) (255 * Math.pow(((double)((double)g/255)), valor_gamma)));
+	            b = filtrosUtils.TruncarValor((int) (255 * Math.pow(((double)((double)b/255)), valor_gamma)));
+	            p.setRGB(r, g, b);
+	            filtrosUtils.setPixel(img, i, j, p, formato);
+	        }
+	    }
+	    return img;
+	}
 }
