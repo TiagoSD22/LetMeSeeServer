@@ -676,4 +676,30 @@ public class FiltrosFacade {
 								  .concat(extrairB? "B" : "").concat(")"),novoConteudoBase64);
 		return saida;
 	}
+	
+	public Imagem Mock(Imagem img) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.Pixelate(imagem, formato);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				//f = filtros.ExtrairCanal(f, formato, extrairR, extrairG, extrairB);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,img.getNome().concat("+Mock"),novoConteudoBase64);
+		return saida;
+	}
 }

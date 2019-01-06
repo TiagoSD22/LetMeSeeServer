@@ -46,6 +46,9 @@ public class ImagemService {
 	public Imagem aplicarFiltro(String filtro, String parametrosFiltro, Imagem img) {
 		Imagem saida = null;
 		switch(filtro) {
+		case "mock":
+			saida = FiltrosFacade.getInstancia().Mock(img);
+			break;
 		case "negativo":
 			saida = FiltrosFacade.getInstancia().Negativo(img);
 			break;

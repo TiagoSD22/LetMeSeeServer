@@ -1,9 +1,12 @@
 package com.letmesee.service;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.inject.Singleton;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -256,6 +259,7 @@ public class Filtros {
 		double [] probabilidadesB = new double[256];
 		double acumuladorB;
 		int [] mapeadorB = new int[256];
+		int pixelsValidos = 0;
 		
 		for(i = 0; i < 256; i++) {
 			niveisR[i] = 0;
@@ -268,6 +272,7 @@ public class Filtros {
 				p = filtrosUtils.getPixel(img, i, j, formato);
 				if(formato.equals(filtrosUtils.FORMATO_PNG)) {
 					if(p.getAlpha() != 0) {
+						pixelsValidos++;
 						niveisR[p.getR()]++;
 						niveisG[p.getG()]++;
 						niveisB[p.getB()]++;
@@ -285,9 +290,16 @@ public class Filtros {
 		acumuladorG = 0;
 		acumuladorB = 0;
 		for(i = 0; i < 256; i++) {
-			probabilidadesR[i] = ((double) niveisR[i] / (img.getHeight() * img.getWidth()));
-			probabilidadesG[i] = ((double) niveisG[i] / (img.getHeight() * img.getWidth()));
-			probabilidadesB[i] = ((double) niveisB[i] / (img.getHeight() * img.getWidth()));
+			if(formato.equals(filtrosUtils.FORMATO_PNG)) {
+				probabilidadesR[i] = ((double) niveisR[i] / (double) pixelsValidos);
+				probabilidadesG[i] = ((double) niveisG[i] / (double) pixelsValidos);
+				probabilidadesB[i] = ((double) niveisB[i] / (double) pixelsValidos);
+			}
+			else {
+				probabilidadesR[i] = ((double) niveisR[i] / (img.getHeight() * img.getWidth()));
+				probabilidadesG[i] = ((double) niveisG[i] / (img.getHeight() * img.getWidth()));
+				probabilidadesB[i] = ((double) niveisB[i] / (img.getHeight() * img.getWidth()));
+			}
 			acumuladorR += probabilidadesR[i];
 			acumuladorG += probabilidadesG[i];
 			acumuladorB += probabilidadesB[i];
@@ -387,6 +399,34 @@ public class Filtros {
 	    Core.sqrt(rob, rob);
 	    
 		img = filtrosUtils.Mat2BufferedImage(rob, formato);
+        return img;
+	}
+	
+	public BufferedImage Pixelate(BufferedImage img, String formato){
+		Mat src = filtrosUtils.BufferedImage2Mat(img, formato);
+		Mat saida = new Mat(src.rows(),src.cols(),src.type());
+	    int depth = CvType.CV_32F;
+	    
+	    Mat Gx = new Mat(3,3, CvType.CV_64F){
+	        {
+	           put(0,0,1/9);
+	           put(0,1,1/9);
+	           put(0,2,1/9);
+	           
+	           put(1,0,1/9);
+	           put(1,1,1/9);
+	           put(1,2,1/9);
+	           
+	           put(2,0,1/9);
+	           put(2,1,1/9);
+	           put(2,2,1/9);
+	          
+	        }
+	    };
+	    
+	    Imgproc.filter2D(src, saida, depth, Gx);
+	    
+		img = filtrosUtils.Mat2BufferedImage(src, formato);
         return img;
 	}
 	
@@ -521,6 +561,23 @@ public class Filtros {
 				else p.setRGB(r, b, g);
 				filtrosUtils.setPixel(img, i, j, p, formato);
 			}
+		}
+		return img;
+	}
+	
+	public BufferedImage Mock(BufferedImage img, String formato) {
+		File input = new File("textura.png");
+		double alpha = 0.6;
+		try {
+			BufferedImage textura = ImageIO.read(input);
+			Mat texturaMat = filtrosUtils.BufferedImage2Mat(textura, "png");
+			Imgproc.resize(texturaMat, texturaMat, new Size(img.getWidth(),img.getHeight()),Imgproc.INTER_AREA);
+			Mat src = filtrosUtils.BufferedImage2Mat(img, formato);
+			Mat saida = new Mat(img.getWidth(),img.getHeight(),src.type());
+			Core.addWeighted(texturaMat, alpha, src, 1, 0.0, saida);
+			img = filtrosUtils.Mat2BufferedImage(saida, formato);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 		return img;
 	}

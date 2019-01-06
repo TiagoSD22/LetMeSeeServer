@@ -248,9 +248,6 @@ public class FiltrosUtils {
 	}
 	
 	public int TruncarValor(int v) {
-		//if(v < 0) return 0;
-		//if(v > 255) return 255;
-		//return v;
 		return v > 255 ? 255 : (v < 0 ? 0 : v);
 	}
 	
