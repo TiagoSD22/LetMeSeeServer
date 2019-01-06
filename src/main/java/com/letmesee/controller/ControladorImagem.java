@@ -24,7 +24,10 @@ public class ControladorImagem {
 	
 	@RequestMapping(value = "/upload", method = RequestMethod.POST)
 	public ResponseEntity<Imagem> uploadFile(MultipartHttpServletRequest mrequest){
-		Imagem imagemCarregada = imgService.uploadImage(mrequest.getParameter("nome"), mrequest.getParameter("formato"), mrequest.getParameter("conteudo").split(",")[1]);
+		String nome = mrequest.getParameter("nome");
+		String formato = mrequest.getParameter("formato");
+		String conteudo = mrequest.getParameter("conteudo").split(",")[1];
+		Imagem imagemCarregada = imgService.uploadImage(nome, formato, conteudo);
 		return new ResponseEntity<Imagem>(imagemCarregada, HttpStatus.OK);
 	}
 	

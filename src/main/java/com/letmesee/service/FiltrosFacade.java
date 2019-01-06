@@ -47,11 +47,14 @@ public class FiltrosFacade {
 		return saida;
 	}
 	
-	public Imagem Limiar(Imagem img, int valorLimiar) {
+	public Imagem Limiar(Imagem img, int valorLimiar, boolean usarMedia, String referencia) {
 		String formato = img.getTipo();
 		String novoConteudoBase64 = "";
 		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
 			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			if(usarMedia) {
+				valorLimiar = filtrosUtils.encontrarIntensidadeMedia(imagem, formato, referencia);
+			}
 			filtros.Limiar(imagem, formato, valorLimiar);
 			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
 			imagem = null;
@@ -61,6 +64,9 @@ public class FiltrosFacade {
 			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
 			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
 			for(BufferedImage f : frames) {
+				if(usarMedia) {
+					valorLimiar = filtrosUtils.encontrarIntensidadeMedia(f, formato, referencia);
+				}
 				f = filtros.Limiar(f, formato, valorLimiar);
 				framesProcessados.add(f);
 			}
@@ -68,7 +74,9 @@ public class FiltrosFacade {
 			frames = null;
 			framesProcessados = null;
 		}
-		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,img.getNome().concat("+Limiar(").concat(String.valueOf(valorLimiar)).concat(")"),novoConteudoBase64);
+		String nomeSaida = img.getNome().concat("+Limiar(").concat(String.valueOf(valorLimiar))
+										.concat(usarMedia ? String.valueOf(" - Média{" + referencia + "}") : "").concat(")");
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,nomeSaida,novoConteudoBase64);
 		return saida;
 	}
 	
@@ -494,6 +502,41 @@ public class FiltrosFacade {
 		return saida;
 	}
 	
+	public Imagem EqualizarCanal(Imagem img, boolean equalizarR, boolean equalizarG, boolean equalizarB, int minR, int maxR, int minG, int maxG, int minB , int maxB) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.EqualizarCanal(imagem, formato, equalizarR, equalizarG, equalizarB, minR, maxR, minG, maxG, minB, maxB);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.EqualizarCanal(f, formato, equalizarR, equalizarG, equalizarB, minR, maxR, minG, maxG, minB, maxB);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,img.getNome().concat("+Equalização_Canal")
+								 .concat("(")
+								 .concat(equalizarR ? "R" : "")
+								 .concat(minR != 0 || maxR != 255 ? String.valueOf("[" + minR + ":" + maxR + "]") : "")
+								 .concat(equalizarG ? "G" : "")
+								 .concat(minG != 0 || maxG != 255 ? String.valueOf("[" + minG + ":" + maxG + "]") : "")
+								 .concat(equalizarB ? "B" : "")
+								 .concat(minB != 0 || maxB != 255 ? String.valueOf("[" + minB + ":" + maxB + "]") : "")
+								 .concat(")")
+								 ,novoConteudoBase64);
+		return saida;
+	}
+	
 	public Imagem Sobel(Imagem img) {
 		String formato = img.getTipo();
 		String novoConteudoBase64 = "";
@@ -517,6 +560,58 @@ public class FiltrosFacade {
 		}
 		
 		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,img.getNome().concat("+Sobel"),novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem Roberts_Cross(Imagem img) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.Roberts_Cross(imagem, formato);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.Roberts_Cross(f, formato);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,img.getNome().concat("+Roberts_Cross"),novoConteudoBase64);
+		return saida;
+	}
+	
+	public Imagem Prewitt(Imagem img) {
+		String formato = img.getTipo();
+		String novoConteudoBase64 = "";
+		if(formato.equals("jpg") || formato.equals("png") || formato.equals("bmp")) {
+			BufferedImage imagem = filtrosUtils.base64toBufferedImage(img.getConteudoBase64());
+			imagem = filtros.Prewitt(imagem, formato);
+			novoConteudoBase64 = filtrosUtils.BufferedImageToBase64(imagem,formato);
+			imagem = null;
+		}
+		else if(formato.equals("gif")) {
+			ArrayList<Integer> delays = new ArrayList<Integer>();
+			ArrayList<BufferedImage> frames = filtrosUtils.getGifFrames(img.getConteudoBase64(),delays);
+			ArrayList<BufferedImage> framesProcessados = new ArrayList<BufferedImage>();
+			for(BufferedImage f : frames) {
+				f = filtros.Prewitt(f, formato);
+				framesProcessados.add(f);
+			}
+			novoConteudoBase64 = filtrosUtils.gerarBase64GIF(framesProcessados,delays);
+			frames = null;
+			framesProcessados = null;
+		}
+		
+		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,img.getNome().concat("+Prewitt"),novoConteudoBase64);
 		return saida;
 	}
 	

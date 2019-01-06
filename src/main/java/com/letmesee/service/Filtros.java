@@ -1,6 +1,9 @@
 package com.letmesee.service;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.inject.Singleton;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -73,7 +76,7 @@ public class Filtros {
 				p = filtrosUtils.getPixel(img, i, j, formato);
 				r = (int) (p.getR() * 0.299);
 				g = (int) (p.getG() * 0.587);
-				b = (int) (p.getB() *0.114);
+				b = (int) (p.getB() * 0.114);
 				novaCor = r + g + b;
 				p.setRGB(novaCor,novaCor,novaCor);
 				filtrosUtils.setPixel(img, i, j, p, formato);
@@ -199,49 +202,246 @@ public class Filtros {
 	
 	public BufferedImage EqualizarHistograma(BufferedImage img, String formato){
 		Mat mat = filtrosUtils.BufferedImage2Mat(img, formato);
-		Mat destination = new Mat(mat.rows(),mat.cols(),mat.type());
-        Imgproc.equalizeHist(mat, destination);
-		img = filtrosUtils.Mat2BufferedImage(destination, formato);
+		if(mat.type() == 16) {
+			Mat destination = new Mat(mat.rows(),mat.cols(),mat.type());
+	        Imgproc.cvtColor(mat, destination,Imgproc.COLOR_BGR2YCrCb);
+	        List<Mat> canais = new ArrayList<Mat>();
+	        Core.split(destination, canais);
+	        Imgproc.equalizeHist(canais.get(0), canais.get(0));
+	        Core.merge(canais, destination);
+	        Imgproc.cvtColor(destination, destination, Imgproc.COLOR_YCrCb2BGR);
+			img = filtrosUtils.Mat2BufferedImage(destination, formato);
+		}
+		else if(mat.type() == 24) {
+			Mat destination = new Mat(mat.rows(),mat.cols(),mat.type());
+	        Imgproc.cvtColor(mat, destination,Imgproc.COLOR_BGR2YCrCb);
+	        List<Mat> canais = new ArrayList<Mat>();
+	        Core.split(destination, canais);
+	        Imgproc.equalizeHist(canais.get(0), canais.get(0));
+	        Core.merge(canais, destination);
+	        Imgproc.cvtColor(destination, destination, Imgproc.COLOR_YCrCb2BGR);
+			BufferedImage imgRGB = filtrosUtils.Mat2BufferedImage(destination, formato);
+			Pixel pRGB;
+			Pixel pRGBA;
+			for(int i = 0; i < img.getHeight(); i++) {
+				for(int j = 0; j < img.getWidth(); j++) {
+					pRGB = filtrosUtils.getPixel(imgRGB, i, j, "jpg");
+					pRGBA = filtrosUtils.getPixel(img, i, j, formato);
+					pRGBA.setRGBA(pRGB.getR(), pRGB.getG(), pRGB.getB(), pRGBA.getAlpha());
+					filtrosUtils.setPixel(img, i, j, pRGBA, formato);
+				}
+			}
+		}
+		else {
+			Mat destination = new Mat(mat.rows(),mat.cols(),mat.type());
+			Imgproc.equalizeHist(mat, destination);
+			img = filtrosUtils.Mat2BufferedImage(destination, formato);
+		}
         return img;
 	}
 	
+	public BufferedImage EqualizarCanal(BufferedImage img, String formato, boolean equalizarR, boolean equalizarG, boolean equalizarB, int minR, int maxR, int minG, int maxG, int minB, int maxB) {
+		int i,j,r,g,b;
+		Pixel p;
+		BufferedImage saida = new BufferedImage(img.getWidth(), img.getHeight(), img.getType());
+		int [] niveisR = new int[256];
+		double [] probabilidadesR = new double[256];
+		double acumuladorR;
+		int [] mapeadorR = new int[256];
+		int [] niveisG = new int[256];
+		double [] probabilidadesG = new double[256];
+		double acumuladorG;
+		int [] mapeadorG = new int[256];
+		int [] niveisB = new int[256];
+		double [] probabilidadesB = new double[256];
+		double acumuladorB;
+		int [] mapeadorB = new int[256];
+		
+		for(i = 0; i < 256; i++) {
+			niveisR[i] = 0;
+			niveisG[i] = 0;
+			niveisB[i] = 0;
+		}
+		
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				p = filtrosUtils.getPixel(img, i, j, formato);
+				if(formato.equals(filtrosUtils.FORMATO_PNG)) {
+					if(p.getAlpha() != 0) {
+						niveisR[p.getR()]++;
+						niveisG[p.getG()]++;
+						niveisB[p.getB()]++;
+					}
+				}
+				else {
+					niveisR[p.getR()]++;
+					niveisG[p.getG()]++;
+					niveisB[p.getB()]++;
+				}
+			}
+		}
+		
+		acumuladorR = 0;
+		acumuladorG = 0;
+		acumuladorB = 0;
+		for(i = 0; i < 256; i++) {
+			probabilidadesR[i] = ((double) niveisR[i] / (img.getHeight() * img.getWidth()));
+			probabilidadesG[i] = ((double) niveisG[i] / (img.getHeight() * img.getWidth()));
+			probabilidadesB[i] = ((double) niveisB[i] / (img.getHeight() * img.getWidth()));
+			acumuladorR += probabilidadesR[i];
+			acumuladorG += probabilidadesG[i];
+			acumuladorB += probabilidadesB[i];
+			mapeadorR[i] = (int) (255 * acumuladorR);
+			mapeadorG[i] = (int) (255 * acumuladorG);
+			mapeadorB[i] = (int) (255 * acumuladorB);
+		}
+		
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				p = filtrosUtils.getPixel(img, i, j, formato);
+				if(equalizarR) {
+					r = p.getR();
+					if(r >= minR && r <= maxR) {
+						p.setR(mapeadorR[r]);
+					}
+				}
+				if(equalizarG) {
+					g = p.getG();
+					if(g >= minG && g <= maxG) {
+						p.setG(mapeadorG[g]);
+					}
+				}
+				if(equalizarB) {
+					b = p.getB();
+					if(b >= minB && b <= maxB) {
+						p.setB(mapeadorB[b]);
+					}
+				}
+				filtrosUtils.setPixel(saida, i, j, p, formato);
+			}
+		}
+		
+		return saida;
+	}
+	
 	public BufferedImage Sobel(BufferedImage img, String formato){
-		Mat mat = filtrosUtils.BufferedImage2Mat(img, formato);
+		Mat src = filtrosUtils.BufferedImage2Mat(img, formato);
 		Mat sobel = new Mat();
-	    Mat grad_x = new Mat();
-	    Mat abs_grad_x = new Mat();
-	    Mat grad_y = new Mat();
-	    Mat abs_grad_y = new Mat();
-	    int type = CvType.CV_16S;
-	    Imgproc.Sobel(mat, grad_x, type, 1, 0, 3, 1, 0);
+	    Mat gradX = new Mat();
+	    Mat squareGradX = new Mat();
+	    Mat gradY = new Mat();
+	    Mat squareGradY = new Mat();
+	    int type = CvType.CV_32F;
 	    
-	    //Calculating gradient in vertical direction
-	    Imgproc.Sobel(mat, grad_y, type, 0, 1, 3, 1, 0);
+	    Imgproc.Sobel(src, gradX, type, 1, 0);
+	    Imgproc.Sobel(src, gradY, type, 0, 1);
 
-	    //Calculating absolute value of gradients in both the direction
-	    Core.convertScaleAbs(grad_x, abs_grad_x);
-	    Core.convertScaleAbs(grad_y, abs_grad_y);
+	    Core.pow(gradX,2, squareGradX);
+	    Core.pow(gradY,2, squareGradY);
 
-	    //Calculating the resultant gradient
-	    //Core.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 1, sobel);
-	    Imgproc.Laplacian(mat, sobel, type, 5);
+	    //Core.addWeighted(squareGradX, 0.5, squareGradY, 0.5, 1, sobel);
+	    Core.add(squareGradX, squareGradY, sobel);
+	    Core.sqrt(sobel, sobel);
+	  
 		img = filtrosUtils.Mat2BufferedImage(sobel, formato);
         return img;
 	}
 	
-	public BufferedImage Contraste(BufferedImage img, String formato, int bias){
-		Mat mat = filtrosUtils.BufferedImage2Mat(img, formato);
-		Mat destination = new Mat(mat.rows(),mat.cols(),mat.type());
-		mat.convertTo(destination, -1, 1, bias);
-		img = filtrosUtils.Mat2BufferedImage(destination, formato);
+	public BufferedImage Roberts_Cross(BufferedImage img, String formato){
+		Mat src = filtrosUtils.BufferedImage2Mat(img, formato);
+		Mat rob = new Mat(src.rows(),src.cols(),src.type());
+	    Mat gradX = new Mat(src.rows(),src.cols(),src.type());
+	    Mat squareGradX = new Mat(src.rows(),src.cols(),src.type());
+	    Mat gradY = new Mat(src.rows(),src.cols(),src.type());
+	    Mat squareGradY = new Mat(src.rows(),src.cols(),src.type());
+	    int depth = CvType.CV_32F;
+	    
+	    Mat Gx = new Mat(2,2, CvType.CV_32F){
+	        {
+	           put(0,0,1);
+	           put(0,1,0);
+	           
+	           put(1,0,0);
+	           put(1,1,-1);
+	        }
+	    };
+	    
+	    Mat Gy = new Mat(2,2, CvType.CV_32F){
+	        {
+	           put(0,0,0);
+	           put(0,1,1);
+	           
+	           put(1,0,-1);
+	           put(1,1,0);
+	        }
+	    }; 
+	    
+	    Imgproc.filter2D(src, gradX, depth, Gx);
+	    Core.pow(gradX, 2, squareGradX);
+	    
+	    Imgproc.filter2D(src, gradY, depth, Gy);
+	    Core.pow(gradY, 2, squareGradY);
+	    
+	    //Core.addWeighted(squareGradX, 0.5, squareGradY, 0.5, 1, rob);
+	    Core.add(squareGradX, squareGradY, rob);
+	    Core.sqrt(rob, rob);
+	    
+		img = filtrosUtils.Mat2BufferedImage(rob, formato);
         return img;
 	}
 	
-	public BufferedImage Brilho(BufferedImage img, String formato, double gain){
-		Mat mat = filtrosUtils.BufferedImage2Mat(img, formato);
-		Mat destination = new Mat(mat.rows(),mat.cols(),mat.type());
-		mat.convertTo(destination, -1, gain, 0);
-		img = filtrosUtils.Mat2BufferedImage(destination, formato);
+	public BufferedImage Prewitt(BufferedImage img, String formato){
+		Mat src = filtrosUtils.BufferedImage2Mat(img, formato);
+		Mat pwt = new Mat(src.rows(),src.cols(),src.type());
+	    Mat gradX = new Mat(src.rows(),src.cols(),src.type());
+	    Mat squareGradX = new Mat(src.rows(),src.cols(),src.type());
+	    Mat gradY = new Mat(src.rows(),src.cols(),src.type());
+	    Mat squareGradY = new Mat(src.rows(),src.cols(),src.type());
+	    int depth = CvType.CV_32F;
+	    
+	    Mat Gx = new Mat(3,3, CvType.CV_32F){
+	        {
+	           put(0,0,1);
+	           put(0,1,0);
+	           put(0,2,-1);
+	           
+	           put(1,0,1);
+	           put(1,1,0);
+	           put(1,2,-1);
+	           
+	           put(2,0,1);
+	           put(2,1,0);
+	           put(2,2,-1);
+	        }
+	    };
+	    
+	    Mat Gy = new Mat(3,3, CvType.CV_32F){
+	        {
+	           put(0,0,1);
+	           put(0,1,1);
+	           put(0,2,1);
+	           
+	           put(1,0,0);
+	           put(1,1,0);
+	           put(1,2,0);
+	           
+	           put(2,0,-1);
+	           put(2,1,-1);
+	           put(2,2,-1);
+	        }
+	    }; 
+	    
+	    Imgproc.filter2D(src, gradX, depth, Gx);
+	    Core.pow(gradX, 2, squareGradX);
+	    
+	    Imgproc.filter2D(src, gradY, depth, Gy);
+	    Core.pow(gradY, 2, squareGradY);
+	    
+	    //Core.addWeighted(squareGradX, 0.5, squareGradY, 0.5, 1, pwt);
+	    Core.add(squareGradX, squareGradY, pwt);
+	    Core.sqrt(pwt,pwt);
+	    
+		img = filtrosUtils.Mat2BufferedImage(pwt, formato);
         return img;
 	}
 	
@@ -324,4 +524,8 @@ public class Filtros {
 		}
 		return img;
 	}
+	
+	//filtros interessante de se ver
+    //Imgproc.applyColorMap(mat, rob, Imgproc.COLORMAP_WINTER);
+    //Imgproc.threshold(mat, rob, 150, 255, Imgproc.THRESH_BINARY);
 }

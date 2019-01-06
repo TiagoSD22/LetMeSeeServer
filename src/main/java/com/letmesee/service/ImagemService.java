@@ -57,7 +57,7 @@ public class ImagemService {
 			JsonNode parametroJson;
 			try {
 				parametroJson = mapper.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().Limiar(img, parametroJson.get("valor").asInt());
+				saida = FiltrosFacade.getInstancia().Limiar(img, parametroJson.get("valor").asInt(),parametroJson.get("usarMedia").asBoolean(),parametroJson.get("referencia").asText());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -115,6 +115,12 @@ public class ImagemService {
 		case "sobel":
 			saida = FiltrosFacade.getInstancia().Sobel(img);
 			break;
+		case "roberts":
+			saida = FiltrosFacade.getInstancia().Roberts_Cross(img);
+			break;
+		case "prewitt":
+			saida = FiltrosFacade.getInstancia().Prewitt(img);
+			break;
 		case "contraste":
 			ObjectMapper mapperContraste = new ObjectMapper();
 			JsonNode parametroContraste;
@@ -147,6 +153,24 @@ public class ImagemService {
 			break;
 		case "equalizar_histograma":
 			saida = FiltrosFacade.getInstancia().EqualizarHistograma(img);
+			break;
+		case "equalizar_canal":
+			ObjectMapper mapperEqCanal = new ObjectMapper();
+			JsonNode parametroJsonEqCanal;
+			try {
+				parametroJsonEqCanal = mapperEqCanal.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().EqualizarCanal(img, parametroJsonEqCanal.get("equalizarR").asBoolean(),
+																	parametroJsonEqCanal.get("equalizarG").asBoolean(),
+																	parametroJsonEqCanal.get("equalizarB").asBoolean(),
+																	parametroJsonEqCanal.get("minR").asInt(),
+																	parametroJsonEqCanal.get("maxR").asInt(),
+																	parametroJsonEqCanal.get("minG").asInt(),
+																	parametroJsonEqCanal.get("maxG").asInt(),
+																	parametroJsonEqCanal.get("minB").asInt(),
+																	parametroJsonEqCanal.get("maxB").asInt());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			break;
 		case "ajusteRGB":
 			ObjectMapper mapperRGB = new ObjectMapper();

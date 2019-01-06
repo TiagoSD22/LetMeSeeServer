@@ -4,7 +4,10 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Base64;
 
@@ -18,10 +21,10 @@ import org.opencv.imgcodecs.Imgcodecs;
 @Singleton
 public class FiltrosUtils {
 	
-	private final String FORMATO_JPG  = "jpg";
-	private final String FORMATO_BMP  = "bmp";
-	private final String FORMATO_PNG  = "png";
-	private final String FORMATO_GIF  = "gif";
+	public final String FORMATO_JPG  = "jpg";
+	public final String FORMATO_BMP  = "bmp";
+	public final String FORMATO_PNG  = "png";
+	public final String FORMATO_GIF  = "gif";
 	
 	private static FiltrosUtils instancia;
 	private FiltrosUtils() {}
@@ -31,6 +34,32 @@ public class FiltrosUtils {
 			instancia = new FiltrosUtils();
 		}
 		return instancia;
+	}
+	
+	public void printPixelMap(BufferedImage img, String formato, String nome) {
+		int i,j,r,g,b;
+		Pixel p;
+		FileWriter fileWriter = null;
+		String fnome = "pixels" + nome + ".txt";
+		File f = new File(fnome);
+		try {
+			f.createNewFile();
+			fileWriter = new FileWriter(f);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	    PrintWriter printWriter = new PrintWriter(fileWriter);
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				p = getPixel(img, i, j, formato);
+				r = p.getR();
+				g = p.getG(); 
+				b = p.getB();
+				printWriter.printf(r + "," + g + "," + b + " ");
+			}
+			printWriter.printf("\n");
+		}
 	}
 	
 	public BufferedImage base64toBufferedImage(String conteudoBase64) {
@@ -174,6 +203,15 @@ public class FiltrosUtils {
 		}
 	}
 	
+	public int getIntensidade(BufferedImage img, int i, int j, String formato) {
+		int r,g,b;
+		Pixel p = getPixel(img, i, j, formato);
+		r = p.getR();
+		g = p.getG();
+		b = p.getB();
+		return ((int) (r * 0.299 + g * 0.587 + b* 0.114));
+	}
+	
 	public Pixel getPixel(BufferedImage img, int i, int j, String formato) {
 		if(formato.equals(this.FORMATO_JPG) || formato.equals(this.FORMATO_GIF)) {
 			Color c = new Color(img.getRGB(j, i));
@@ -210,9 +248,10 @@ public class FiltrosUtils {
 	}
 	
 	public int TruncarValor(int v) {
-		if(v < 0) return 0;
-		if(v > 255) return 255;
-		return v;
+		//if(v < 0) return 0;
+		//if(v > 255) return 255;
+		//return v;
+		return v > 255 ? 255 : (v < 0 ? 0 : v);
 	}
 	
 	public ArrayList<BufferedImage> getGifFrames(String conteudoBase64, ArrayList<Integer> delays){
@@ -238,6 +277,131 @@ public class FiltrosUtils {
 			e.printStackTrace();
 		}
 		return imageString;
+	}
+	
+	public int encontrarValorMedioR(BufferedImage img, String formato) {
+		int i,j,mediaR;
+		mediaR = 0;
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				mediaR += getRed(img, i, j, formato);
+			}
+		}
+		return mediaR / (img.getHeight() * img.getWidth());
+	}
+	
+	public int encontrarValorMedioG(BufferedImage img, String formato) {
+		int i,j,mediaG;
+		mediaG = 0;
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				mediaG += getGreen(img, i, j, formato);
+			}
+		}
+		return mediaG / (img.getHeight() * img.getWidth());
+	}
+	
+	public int encontrarValorMedioB(BufferedImage img, String formato) {
+		int i,j,mediaB;
+		mediaB = 0;
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				mediaB += getBlue(img, i, j, formato);
+			}
+		}
+		return mediaB / (img.getHeight() * img.getWidth());
+	}
+	
+	public int encontrarValorMedioRG(BufferedImage img, String formato) {
+		int i,j,r,g,media;
+		Pixel p;
+		media = 0;
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				p = getPixel(img, i, j, formato);
+				r = p.getR();
+				g = p.getG();
+				media += ((int) (r * 0.299 + g * 0.587));
+			}
+		}
+		return media / (img.getHeight() * img.getWidth());
+	}
+	
+	public int encontrarValorMedioRB(BufferedImage img, String formato) {
+		int i,j,r,b,media;
+		Pixel p;
+		media = 0;
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				p = getPixel(img, i, j, formato);
+				r = p.getR();
+				b = p.getB();
+				media += ((int) (r * 0.299 + b* 0.114));
+			}
+		}
+		return media / (img.getHeight() * img.getWidth());
+	}
+	
+	public int encontrarValorMedioGB(BufferedImage img, String formato) {
+		int i,j,g,b,media;
+		Pixel p;
+		media = 0;
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				p = getPixel(img, i, j, formato);
+				g = p.getG();
+				b = p.getB();
+				media += ((int) (g * 0.587 + b* 0.114));
+			}
+		}
+		return media / (img.getHeight() * img.getWidth());
+	}
+	
+	public int encontrarValorMedioRGB(BufferedImage img, String formato) {
+		int i,j,r,g,b,media;
+		Pixel p;
+		media = 0;
+		for(i = 0; i < img.getHeight(); i++) {
+			for(j = 0; j < img.getWidth(); j++) {
+				p = getPixel(img, i, j, formato);
+				r = p.getR();
+				g = p.getG();
+				b = p.getB();
+				media += ((int) (r * 0.299 + g * 0.587 + b* 0.114));
+			}
+		}
+		return media / (img.getHeight() * img.getWidth());
+	}
+	
+	public int encontrarIntensidadeMedia(BufferedImage img, String formato, String canais) {
+		int media;
+		switch(canais) {
+		case "R":
+			media = encontrarValorMedioR(img, formato);
+			break;
+		case "G":
+			media = encontrarValorMedioG(img, formato);
+			break;
+		case "B":
+			media = encontrarValorMedioB(img, formato);
+			break;
+		case "RG":
+			media = encontrarValorMedioRG(img, formato);
+			break;
+		case "RB":
+			media = encontrarValorMedioRB(img, formato);
+			break;
+		case "GB":
+			media = encontrarValorMedioGB(img, formato);
+			break;
+		case "RGB":
+			media = encontrarValorMedioRGB(img, formato);
+			break;
+		default:
+			media = -1;
+			break;
+		}
+		return media;
 	}
 	
 	public class Pixel{
