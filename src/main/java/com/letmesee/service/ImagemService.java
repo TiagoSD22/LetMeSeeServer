@@ -115,6 +115,26 @@ public class ImagemService {
 				e.printStackTrace();
 			}
 			break;
+		case "nitidez":
+			ObjectMapper mapperNitidez = new ObjectMapper();
+			JsonNode parametroNitidez;
+			try {
+				parametroNitidez = mapperNitidez.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().Nitidez(img, parametroNitidez.get("fator").asDouble());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
+		case "pixelate":
+			ObjectMapper mapperPixelate = new ObjectMapper();
+			JsonNode parametroPixelate;
+			try {
+				parametroPixelate = mapperPixelate.readTree(parametrosFiltro);
+				saida = FiltrosFacade.getInstancia().Pixelate(img, parametroPixelate.get("k").asInt());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
 		case "sobel":
 			saida = FiltrosFacade.getInstancia().Sobel(img);
 			break;

@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.imageio.ImageIO;
 import javax.inject.Singleton;
 import org.opencv.core.Core;
@@ -402,34 +401,6 @@ public class Filtros {
         return img;
 	}
 	
-	public BufferedImage Pixelate(BufferedImage img, String formato){
-		Mat src = filtrosUtils.BufferedImage2Mat(img, formato);
-		Mat saida = new Mat(src.rows(),src.cols(),src.type());
-	    int depth = CvType.CV_32F;
-	    
-	    Mat Gx = new Mat(3,3, CvType.CV_64F){
-	        {
-	           put(0,0,1/9);
-	           put(0,1,1/9);
-	           put(0,2,1/9);
-	           
-	           put(1,0,1/9);
-	           put(1,1,1/9);
-	           put(1,2,1/9);
-	           
-	           put(2,0,1/9);
-	           put(2,1,1/9);
-	           put(2,2,1/9);
-	          
-	        }
-	    };
-	    
-	    Imgproc.filter2D(src, saida, depth, Gx);
-	    
-		img = filtrosUtils.Mat2BufferedImage(src, formato);
-        return img;
-	}
-	
 	public BufferedImage Prewitt(BufferedImage img, String formato){
 		Mat src = filtrosUtils.BufferedImage2Mat(img, formato);
 		Mat pwt = new Mat(src.rows(),src.cols(),src.type());
@@ -572,6 +543,7 @@ public class Filtros {
 			BufferedImage textura = ImageIO.read(input);
 			Mat texturaMat = filtrosUtils.BufferedImage2Mat(textura, "png");
 			Imgproc.resize(texturaMat, texturaMat, new Size(img.getWidth(),img.getHeight()),Imgproc.INTER_AREA);
+			//Imgproc.cvt
 			Mat src = filtrosUtils.BufferedImage2Mat(img, formato);
 			Mat saida = new Mat(img.getWidth(),img.getHeight(),src.type());
 			Core.addWeighted(texturaMat, alpha, src, 1, 0.0, saida);
@@ -580,6 +552,55 @@ public class Filtros {
 			e.printStackTrace();
 		}
 		return img;
+	}
+	
+	public BufferedImage Nitidez(BufferedImage img, String formato, double fator) {
+		Mat src = filtrosUtils.BufferedImage2Mat(img, formato);
+		int k = (int)(2 * fator) + 3;
+		if(k % 2 != 1) {
+			k = k + 1;
+		}
+		img = GaussianBlur(img, formato, k, k, 0, 0);
+		Mat srcBlur = filtrosUtils.BufferedImage2Mat(img, formato);
+		Core.subtract(src, srcBlur, srcBlur);
+		Core.addWeighted(src, 1, srcBlur, fator, 0, src);
+		img = filtrosUtils.Mat2BufferedImage(src, formato);
+		return img;
+	}
+	
+	public BufferedImage Pixelate(BufferedImage img, String formato, int k) {
+		BufferedImage saida = new BufferedImage(img.getWidth(),img.getHeight(),img.getType());
+		int[] pixels = new int[k * k];
+        for ( int y = 0; y < img.getHeight(); y += k) {
+            for ( int x = 0; x < img.getWidth(); x += k ) {
+                int w = Math.min( k, img.getWidth()-x );
+                int h = Math.min( k, img.getHeight()-y );
+                int t = w*h;
+                filtrosUtils.getRGB( img, x, y, w, h, pixels );
+                int r = 0, g = 0, b = 0;
+                int argb;
+                int i = 0;
+                for ( int by = 0; by < h; by++ ) {
+                    for ( int bx = 0; bx < w; bx++ ) {
+                        argb = pixels[i];
+                        r += (argb >> 16) & 0xff;
+                        g += (argb >> 8) & 0xff;
+                        b += argb & 0xff;
+                        i++;
+                    }
+                }
+                argb = ((r/t) << 16) | ((g/t) << 8) | (b/t);
+                i = 0;
+                for ( int by = 0; by < h; by++ ) {
+                    for ( int bx = 0; bx < w; bx++ ) {
+                        pixels[i] = (pixels[i] & 0xff000000) | argb;
+                        i++;
+                    }
+                }
+                filtrosUtils.setRGB( saida, x, y, w, h, pixels );
+            }
+        }
+        return saida;
 	}
 	
 	//filtros interessante de se ver
