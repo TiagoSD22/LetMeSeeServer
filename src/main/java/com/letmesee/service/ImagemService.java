@@ -1,245 +1,169 @@
 package com.letmesee.service;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letmesee.entity.Imagem;
 import com.letmesee.repositorio.ImagemRepositorio;
+import com.letmesee.service.filtros.AjusteRGBFacade;
+import com.letmesee.service.filtros.BlurFacade;
+import com.letmesee.service.filtros.BrilhoFacade;
+import com.letmesee.service.filtros.ContrasteFacade;
+import com.letmesee.service.filtros.CortarFacade;
+import com.letmesee.service.filtros.DilatarFacade;
+import com.letmesee.service.filtros.EqualizarCanalFacade;
+import com.letmesee.service.filtros.EqualizarHistogramaFacade;
+import com.letmesee.service.filtros.ErodirFacade;
+import com.letmesee.service.filtros.EscalaDeCinzaFacade;
+import com.letmesee.service.filtros.EspelhoHorizontalFacade;
+import com.letmesee.service.filtros.EspelhoVerticalFacade;
+import com.letmesee.service.filtros.ExtrairCanalFacade;
+import com.letmesee.service.filtros.GaussianBlurFacade;
+import com.letmesee.service.filtros.LimiarFacade;
+import com.letmesee.service.filtros.MedianaFacade;
+import com.letmesee.service.filtros.NegativoFacade;
+import com.letmesee.service.filtros.NitidezFacade;
+import com.letmesee.service.filtros.PixelateFacade;
+import com.letmesee.service.filtros.PrewittFacade;
+import com.letmesee.service.filtros.RedimensionarFacade;
+import com.letmesee.service.filtros.RobertsCrossFacade;
+import com.letmesee.service.filtros.RotacaoAntiHorariaFacade;
+import com.letmesee.service.filtros.RotacaoHorariaFacade;
+import com.letmesee.service.filtros.SobelFacade;
+import com.letmesee.service.filtros.TrocarCanaisFacade;
 
 @Service
 public class ImagemService {
 	@Autowired
 	private ImagemRepositorio imgRepositorio;
-	
+
 	public Imagem uploadImage(String nome, String formato, String conteudoBase64) {
 		BufferedImage image = FiltrosUtils.getInstancia().base64toBufferedImage(conteudoBase64);
-		Imagem imagemCarregada = new Imagem(image.getWidth(),image.getHeight(),formato,nome,conteudoBase64);
+		Imagem imagemCarregada = new Imagem(image.getWidth(), image.getHeight(), formato, nome, conteudoBase64);
 		imgRepositorio.save(imagemCarregada);
 		return imagemCarregada;
 	}
-	
+
 	public List<Imagem> obterHistorico() {
 		return imgRepositorio.findAll();
 	}
-	
+
 	public Optional<Imagem> obterImagem(int id) {
 		return imgRepositorio.findById(id);
 	}
-	
+
 	public void salvarImagem(Imagem img) {
 		imgRepositorio.save(img);
 	}
-	
+
 	public void excluirImagem(int id) {
 		imgRepositorio.deleteById(id);
 	}
-	
+
 	public void limparHistorico() {
 		imgRepositorio.deleteAll();
 	}
-	
+
 	public Imagem aplicarFiltro(String filtro, String parametrosFiltro, Imagem img) {
 		Imagem saida = null;
-		switch(filtro) {
-		case "mock":
-			saida = FiltrosFacade.getInstancia().Mock(img);
-			break;
+		switch (filtro) {
+		
+		//seção de filtros
 		case "negativo":
-			saida = FiltrosFacade.getInstancia().Negativo(img);
+			saida = NegativoFacade.getInstancia().Processar(img);
 			break;
 		case "escala_cinza":
-			saida = FiltrosFacade.getInstancia().EscalaDeCinza(img);
+			saida = EscalaDeCinzaFacade.getInstancia().Processar(img);
 			break;
 		case "limiar":
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode parametroJson;
-			try {
-				parametroJson = mapper.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().Limiar(img, parametroJson.get("valor").asInt(),parametroJson.get("usarMedia").asBoolean(),parametroJson.get("referencia").asText());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			saida = LimiarFacade.getInstancia().Processar(img, parametrosFiltro);
 			break;
 		case "dilatar":
-			ObjectMapper mapperDilatar = new ObjectMapper();
-			JsonNode parametroDilatar;
-			try {
-				parametroDilatar = mapperDilatar.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().Dilatar(img, parametroDilatar.get("w").asInt(),parametroDilatar.get("h").asInt());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			saida = DilatarFacade.getInstancia().Processar(img, parametrosFiltro);
 			break;
 		case "erodir":
-			ObjectMapper mapperErodir = new ObjectMapper();
-			JsonNode parametroErodir;
-			try {
-				parametroErodir = mapperErodir.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().Erodir(img, parametroErodir.get("w").asInt(),parametroErodir.get("h").asInt());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			break;
-		case "blur":
-			ObjectMapper mapperBlur = new ObjectMapper();
-			JsonNode parametroBlur;
-			try {
-				parametroBlur = mapperBlur.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().Blur(img, parametroBlur.get("w").asInt(),parametroBlur.get("h").asInt());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			break;
-		case "gaussian_blur":
-			ObjectMapper mapperGBlur = new ObjectMapper();
-			JsonNode parametroGBlur;
-			try {
-				parametroGBlur = mapperGBlur.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().GaussianBlur(img, parametroGBlur.get("w").asInt(),parametroGBlur.get("h").asInt(), parametroGBlur.get("x").asDouble(), parametroGBlur.get("y").asDouble());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			break;
-		case "mediana":
-			ObjectMapper mapperMediana = new ObjectMapper();
-			JsonNode parametroMediana;
-			try {
-				parametroMediana = mapperMediana.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().Mediana(img, parametroMediana.get("k").asInt());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			break;
-		case "nitidez":
-			ObjectMapper mapperNitidez = new ObjectMapper();
-			JsonNode parametroNitidez;
-			try {
-				parametroNitidez = mapperNitidez.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().Nitidez(img, parametroNitidez.get("fator").asDouble());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			break;
-		case "pixelate":
-			ObjectMapper mapperPixelate = new ObjectMapper();
-			JsonNode parametroPixelate;
-			try {
-				parametroPixelate = mapperPixelate.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().Pixelate(img, parametroPixelate.get("k").asInt());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			break;
-		case "sobel":
-			saida = FiltrosFacade.getInstancia().Sobel(img);
-			break;
-		case "roberts":
-			saida = FiltrosFacade.getInstancia().Roberts_Cross(img);
-			break;
-		case "prewitt":
-			saida = FiltrosFacade.getInstancia().Prewitt(img);
-			break;
-		case "contraste":
-			ObjectMapper mapperContraste = new ObjectMapper();
-			JsonNode parametroContraste;
-			try {
-				parametroContraste = mapperContraste.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().AjustarContraste(img, parametroContraste.get("gamma").asDouble());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			break;
-		case "trocar_canais":
-			ObjectMapper mapperTrocaCanais = new ObjectMapper();
-			JsonNode parametroTrocaCanais;
-			try {
-				parametroTrocaCanais = mapperTrocaCanais.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().TrocarCanais(img, parametroTrocaCanais.get("canais").asText());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			break;
-		case "brilho":
-			ObjectMapper mapperBrilho = new ObjectMapper();
-			JsonNode parametroBrilho;
-			try {
-				parametroBrilho = mapperBrilho.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().AjustarBrilho(img, parametroBrilho.get("gain").asInt());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			break;
-		case "equalizar_histograma":
-			saida = FiltrosFacade.getInstancia().EqualizarHistograma(img);
-			break;
-		case "equalizar_canal":
-			ObjectMapper mapperEqCanal = new ObjectMapper();
-			JsonNode parametroJsonEqCanal;
-			try {
-				parametroJsonEqCanal = mapperEqCanal.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().EqualizarCanal(img, parametroJsonEqCanal.get("equalizarR").asBoolean(),
-																	parametroJsonEqCanal.get("equalizarG").asBoolean(),
-																	parametroJsonEqCanal.get("equalizarB").asBoolean(),
-																	parametroJsonEqCanal.get("minR").asInt(),
-																	parametroJsonEqCanal.get("maxR").asInt(),
-																	parametroJsonEqCanal.get("minG").asInt(),
-																	parametroJsonEqCanal.get("maxG").asInt(),
-																	parametroJsonEqCanal.get("minB").asInt(),
-																	parametroJsonEqCanal.get("maxB").asInt());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			break;
-		case "ajusteRGB":
-			ObjectMapper mapperRGB = new ObjectMapper();
-			JsonNode parametroJsonRGB;
-			try {
-				parametroJsonRGB = mapperRGB.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().AjusteRGB(img, parametroJsonRGB.get("valorR").asInt(),parametroJsonRGB.get("valorG").asInt(),parametroJsonRGB.get("valorB").asInt());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			saida = ErodirFacade.getInstancia().Processar(img, parametrosFiltro);
 			break;
 		case "extrair_canal":
-			ObjectMapper mapperExtrair = new ObjectMapper();
-			JsonNode parametroJsonExtrair;
-			try {
-				parametroJsonExtrair = mapperExtrair.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().ExtrairCanal(img, parametroJsonExtrair.get("R").asBoolean(),parametroJsonExtrair.get("G").asBoolean(),parametroJsonExtrair.get("B").asBoolean());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			saida = ExtrairCanalFacade.getInstancia().Processar(img, parametrosFiltro);
 			break;
+		case "trocar_canais":
+			saida = TrocarCanaisFacade.getInstancia().Processar(img, parametrosFiltro);
+			break;
+		case "pixelate":
+			saida = PixelateFacade.getInstancia().Processar(img, parametrosFiltro);
+			break;
+		//fim da seção de filtros
+			
+		//seção de ajuste
+		case "contraste":
+			saida = ContrasteFacade.getInstancia().Processar(img, parametrosFiltro);
+			break;
+		case "brilho":
+			saida = BrilhoFacade.getInstancia().Processar(img, parametrosFiltro);
+			break;
+		case "ajusteRGB":
+			saida = AjusteRGBFacade.getInstancia().Processar(img, parametrosFiltro);
+			break;
+		case "nitidez":
+			saida = NitidezFacade.getInstancia().Processar(img, parametrosFiltro);
+			break;
+		case "mediana":
+			saida = MedianaFacade.getInstancia().Processar(img, parametrosFiltro);
+			break;
+		case "blur":
+			saida = BlurFacade.getInstancia().Processar(img, parametrosFiltro);
+			break;
+		case "gaussian_blur":
+			saida = GaussianBlurFacade.getInstancia().Processar(img, parametrosFiltro);
+			break;
+		case "equalizar_histograma":
+			saida = EqualizarHistogramaFacade.getInstancia().Processar(img);
+			break;
+		case "equalizar_canal":
+			saida = EqualizarCanalFacade.getInstancia().Processar(img, parametrosFiltro);
+			break;
+		//fim da seção de ajuste
+			
+		//seção de transformar
 		case "redimensionar":
-			ObjectMapper mapperResize = new ObjectMapper();
-			JsonNode parametroJsonResize;
-			try {
-				parametroJsonResize = mapperResize.readTree(parametrosFiltro);
-				saida = FiltrosFacade.getInstancia().Redimensionar(img, parametroJsonResize.get("w").asInt(),parametroJsonResize.get("h").asInt());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			saida = RedimensionarFacade.getInstancia().Processar(img, parametrosFiltro);
 			break;
 		case "espelhoH":
-			saida = FiltrosFacade.getInstancia().EspelhoHorizontal(img);
+			saida = EspelhoHorizontalFacade.getInstancia().Processar(img);
 			break;
 		case "espelhoV":
-			saida = FiltrosFacade.getInstancia().EspelhoVertical(img);
+			saida = EspelhoVerticalFacade.getInstancia().Processar(img);
 			break;
 		case "girarH":
-			saida = FiltrosFacade.getInstancia().GirarHorario(img);
+			saida = RotacaoHorariaFacade.getInstancia().Processar(img);
 			break;
 		case "girarAH":
-			saida = FiltrosFacade.getInstancia().GirarAntiHorario(img);
+			saida = RotacaoAntiHorariaFacade.getInstancia().Processar(img);
 			break;
+		case "cortar":
+			saida = CortarFacade.getInstancia().Processar(img, parametrosFiltro);
+			break;
+		//fim da seção de transformar
+		
+		//seção bordas
+		case "prewitt":
+			saida = PrewittFacade.getInstancia().Processar(img);
+			break;
+		case "roberts":
+			saida = RobertsCrossFacade.getInstancia().Processar(img);
+			break;
+		case "sobel":
+			saida = SobelFacade.getInstancia().Processar(img);
+			break;
+		//fim da seção bordas
+			
 		default:
 			break;
 		}
+		
 		imgRepositorio.save(saida);
 		return saida;
 	}

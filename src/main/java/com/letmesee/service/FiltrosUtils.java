@@ -46,7 +46,6 @@ public class FiltrosUtils {
 			f.createNewFile();
 			fileWriter = new FileWriter(f);
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 	    PrintWriter printWriter = new PrintWriter(fileWriter);
