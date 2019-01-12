@@ -120,10 +120,10 @@ public class CortarFacade {
 	}
 	
 	public BufferedImage CortarCircular(BufferedImage img, String modo, int x1, int y1, int larguraRegiao, int alturaRegiao) {
-		int h = (x1 + x1 + larguraRegiao) / 2;
-		int k = (y1 + y1 + alturaRegiao) / 2;
-		int maiorRaio = larguraRegiao > alturaRegiao? larguraRegiao / 2 : alturaRegiao / 2;
-		int menorRaio = larguraRegiao < alturaRegiao? larguraRegiao / 2 : alturaRegiao / 2;
+		double h = (x1 + x1 + larguraRegiao) / 2;
+		double k = (y1 + y1 + alturaRegiao) / 2;
+		double raioHorizontal = larguraRegiao / 2;
+		double raioVertical = alturaRegiao / 2;
 		int i,j;
 		Pixel p;
 		if(modo.equals("cortar")) {
@@ -131,7 +131,7 @@ public class CortarFacade {
 			for(i = y1; i < y1 + alturaRegiao; i++) {
 				for (j = x1; j < x1 + larguraRegiao; j++) {
 					p = filtrosUtils.getPixel(img, i, j, "png");
-					if (checarRegiao(j, i, h, k, maiorRaio, menorRaio) > 1.0) {
+					if (checarCoordenadaEliptica(j, i, h, k, raioHorizontal, raioVertical) > 1.0) {
 						p.setRGBA(0, 0, 0, 0);
 					}
 					filtrosUtils.setPixel(saida, i - y1, j - x1, p, "png");
@@ -145,7 +145,7 @@ public class CortarFacade {
 				for(j = 0; j < img.getWidth(); j++) {
 					p = filtrosUtils.getPixel(img, i, j, "png");
 					if(i >= y1 && i < y1 + alturaRegiao && j >= x1 && j < x1 + larguraRegiao) {
-						if(checarRegiao(j, i, h, k, maiorRaio, menorRaio) <= 1) {
+						if(checarCoordenadaEliptica(j, i, h, k, raioHorizontal, raioVertical) <= 1.0) {
 							p.setRGBA(0, 0, 0, 0);
 						}
 					}
@@ -156,9 +156,9 @@ public class CortarFacade {
 		}
 	}
 	
-	public double checarRegiao(int x, int y, int h, int k, int maiorRaio, int menorRaio) { 
-	    double p = (Math.pow((x - h), 2) / Math.pow(maiorRaio, 2)) 
-	            + (Math.pow((y - k), 2) / Math.pow(menorRaio, 2)); 
+	public double checarCoordenadaEliptica(int x, int y, double h, double k, double raioHorizontal, double raioVertical) { 
+	    double p = (Math.pow((double)(x - h), 2) / Math.pow(raioHorizontal, 2)) 
+	            + (Math.pow((double)(y - k), 2) / Math.pow(raioVertical, 2)); 
 	  
 	    return p; 
 	} 

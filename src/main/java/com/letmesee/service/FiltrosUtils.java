@@ -415,6 +415,20 @@ public class FiltrosUtils {
 		return media;
 	}
 	
+	public BufferedImage devolverTransparencia(BufferedImage src, BufferedImage dst) {
+		int i,j,a;
+		Pixel p;
+		for(i = 0; i < src.getHeight(); i++) {
+			for(j = 0; j < src.getWidth(); j++) {
+				p = getPixel(dst, i, j, FORMATO_PNG);
+				a = getAlpha(src, i, j, FORMATO_PNG);
+				p.setAlpha(a);
+				setPixel(src, i, j, p, FORMATO_PNG);
+			}
+		}
+		return src;
+	}
+	
 	public class Pixel{
 		int r;
 		int g;

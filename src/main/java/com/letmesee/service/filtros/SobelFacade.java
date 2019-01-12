@@ -53,6 +53,8 @@ public class SobelFacade {
 	
 	public BufferedImage Sobel(BufferedImage img, String formato){
 		Mat src = filtrosUtils.BufferedImage2Mat(img, formato);
+		if(formato.equals(filtrosUtils.FORMATO_PNG)) 
+			Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2BGR);
 		Mat sobel = new Mat();
 	    Mat gradX = new Mat();
 	    Mat squareGradX = new Mat();
@@ -71,6 +73,10 @@ public class SobelFacade {
 	    Core.sqrt(sobel, sobel);
 	    Core.convertScaleAbs(sobel,sobel);
 	  
+	    if(formato.equals(filtrosUtils.FORMATO_PNG)) {
+	    	img = filtrosUtils.devolverTransparencia(img, filtrosUtils.Mat2BufferedImage(sobel, formato));
+	    	return img;
+	    }
 		img = filtrosUtils.Mat2BufferedImage(sobel, formato);
         return img;
 	}

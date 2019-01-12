@@ -53,6 +53,8 @@ public class RobertsCrossFacade {
 	
 	public BufferedImage Roberts_Cross(BufferedImage img, String formato){
 		Mat src = filtrosUtils.BufferedImage2Mat(img, formato);
+		if(formato.equals(filtrosUtils.FORMATO_PNG)) 
+			Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2BGR);
 		Mat rob = new Mat(src.rows(),src.cols(),src.type());
 	    Mat gradX = new Mat(src.rows(),src.cols(),src.type());
 	    Mat squareGradX = new Mat(src.rows(),src.cols(),src.type());
@@ -90,6 +92,10 @@ public class RobertsCrossFacade {
 	    Core.add(squareGradX, squareGradY, rob);
 	    Core.sqrt(rob, rob);
 	    Core.convertScaleAbs(rob, rob);
+	    if(formato.equals(filtrosUtils.FORMATO_PNG)) {
+	    	img = filtrosUtils.devolverTransparencia(img, filtrosUtils.Mat2BufferedImage(rob, formato));
+	    	return img;
+	    }
 		img = filtrosUtils.Mat2BufferedImage(rob, formato);
         return img;
 	}

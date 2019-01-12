@@ -53,6 +53,8 @@ public class PrewittFacade {
 	
 	public BufferedImage Prewitt(BufferedImage img, String formato){
 		Mat src = filtrosUtils.BufferedImage2Mat(img, formato);
+		if(formato.equals(filtrosUtils.FORMATO_PNG)) 
+			Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2BGR);
 		Mat pwt = new Mat(src.rows(),src.cols(),src.type());
 	    Mat gradX = new Mat(src.rows(),src.cols(),src.type());
 	    Mat squareGradX = new Mat(src.rows(),src.cols(),src.type());
@@ -102,6 +104,11 @@ public class PrewittFacade {
 	    Core.add(squareGradX, squareGradY, pwt);
 	    Core.sqrt(pwt,pwt);
 	    Core.convertScaleAbs(pwt, pwt);
+	    
+	    if(formato.equals(filtrosUtils.FORMATO_PNG)) {
+	    	img = filtrosUtils.devolverTransparencia(img, filtrosUtils.Mat2BufferedImage(pwt, formato));
+	    	return img;
+	    }
 		img = filtrosUtils.Mat2BufferedImage(pwt, formato);
         return img;
 	}
