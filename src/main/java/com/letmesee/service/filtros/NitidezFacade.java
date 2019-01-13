@@ -60,8 +60,8 @@ public class NitidezFacade {
 		}
 		
 		Imagem saida = new Imagem(img.getLargura(),img.getAltura(),formato,
-								  img.getNome().concat("+Nitidez(").concat(String.valueOf((fator / 5.0 ) * 100))
-								  .concat(")"),
+								  img.getNome().concat("+Nitidez(").concat(String.valueOf(Math.round((fator / 5.0 ) * 100)))
+								  .concat("%)"),
 							      novoConteudoBase64);
 		return saida;
 	}
